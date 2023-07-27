@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
 use App\Models\Marca;
+use App\Repositories\MarcaRepository;
 use Illuminate\Http\Request;
+use App\Repositories\MarcaRepository;
 
 class MarcaController extends Controller
 {
@@ -19,10 +21,64 @@ class MarcaController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $marca = $this->marca->all();
-        return response()->json($marca, 200);
+        
+        $marcaRepository new MarcaRepository();
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        $marcas =  array();
+       
+        if($request->has('atributos_marca')) {
+            $atributos_modelos = $request->atributos_marca;
+            $marcas = $this->marca->with('modelos:id, '.$atributos_modelos);
+        } else {
+            $marcas = $this->marca->with('modelos');
+        }
+
+        if($request->has('filtro')) {
+            $filtros =  explode(':', $request->filtro);
+            foreach($filtros as $key =>$condicao) {
+                $c =  explode(':', $condicao);
+                $marcas = $marcas->where($c[0], $c[1], $c[2]);
+
+            }
+        }
+
+        if($request->has('atributos')) {
+            $atributos = $request->atributos;
+            $marcas = $marcas->selectRaw($atributos)->get();
+        } else {
+            $marcas = $marcas->get();
+        }
+
+        //$marca = $this->marca->with('modelos')->get();
+        return response()->json($marcas, 200);
+
     }
 
     /**
@@ -64,7 +120,7 @@ class MarcaController extends Controller
      */
     public function show($id)
     {
-        $marca = $this->marca->find($id);
+        $marca = $this->marca->with('modelos')->find($id);
         if($marca == null) {
             return response()->json(['erro' => 'Recurso pesquisado não existe'], 404);
         } 
@@ -120,10 +176,15 @@ class MarcaController extends Controller
         $imagem =  $request->file('imagem');
         $imagem_urn = $imagem->store('imagens', 'public');
 
-        $marca->update([
+        //preencher o objeto $marca com os dados do request
+        $marca->fill($request->all());
+        $marca->imagem = $imagem_urn;
+        $marca->save();
+
+        /*$marca->update([
                 'nome' => $request->nome,
                 'imagem' => $imagem_urn
-        ]);
+        ]);*/
 
         return response()->json($marca, 200);
     }
